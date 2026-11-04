@@ -35,16 +35,16 @@
                 </a>
                 <nav class="hidden md:flex space-x-2">
                     <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
-                    <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
-                    <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
+                    <a href="captura.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
+                    <a href="turno.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
                     <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
                 </nav>
             </div>
         </div>
         <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
             <a href="index.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
-            <a href="captura.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
-            <a href="turno.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
+            <a href="captura.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
+            <a href="turno.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
             <a href="validacion.html" class="p-2 text-xs text-center text-emerald-400"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
         </div>
     </header>
@@ -120,6 +120,16 @@
         </div>
     </main>
 
+    <!-- Modal Genérico -->
+    <div id="appModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center">
+            <div id="appModalIcon" class="text-4xl mb-3"></div>
+            <h3 id="appModalTitle" class="text-lg font-bold text-white mb-2"></h3>
+            <p id="appModalMsg" class="text-sm text-slate-300 mb-6"></p>
+            <div id="appModalBtns" class="flex gap-3 justify-center"></div>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBgmjx_hm3s712V1aTkS46DKepSvQakeF0",
@@ -162,6 +172,22 @@
 
         function getTicketsArray() { return Object.values(appState.tickets || {}); }
 
+        function showModal({ icon = '', title = '', msg = '', buttons = [] }) {
+            document.getElementById('appModalIcon').innerText = icon;
+            document.getElementById('appModalTitle').innerText = title;
+            document.getElementById('appModalMsg').innerText = msg;
+            const btns = document.getElementById('appModalBtns');
+            btns.innerHTML = '';
+            buttons.forEach(b => {
+                const el = document.createElement('button');
+                el.className = b.class;
+                el.innerText = b.label;
+                el.onclick = () => { document.getElementById('appModal').classList.add('hidden'); b.action && b.action(); };
+                btns.appendChild(el);
+            });
+            document.getElementById('appModal').classList.remove('hidden');
+        }
+
         function searchTicketForValidation() {
             const input = document.getElementById('inputScanFolio');
             const query = input.value.trim().toUpperCase();
@@ -171,7 +197,12 @@
             const resultBox = document.getElementById('validationResult');
 
             if (!ticket) {
-                alert('⚠️ Ticket no encontrado en la base de datos.');
+                showModal({
+                    icon: '⚠️',
+                    title: 'Ticket no encontrado',
+                    msg: `No existe ningún ticket con el folio "${query}" en la base de datos.`,
+                    buttons: [{ label: 'Entendido', class: 'flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-sm font-bold text-slate-300 rounded-xl transition', action: null }]
+                });
                 resultBox.classList.add('hidden');
                 return;
             }
@@ -217,9 +248,14 @@
             appState.tickets[currentValidatingTicketId].foodAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             syncToCloud();
             const t = appState.tickets[currentValidatingTicketId];
-            alert(`✅ ¡Alimentos entregados para ${t.folio}! (${t.churros} churros y ${t.chocolates} chocolates)`);
             document.getElementById('inputScanFolio').value = '';
             document.getElementById('validationResult').classList.add('hidden');
+            showModal({
+                icon: '✅',
+                title: '¡Alimentos Entregados!',
+                msg: `Folio ${t.folio} — ${t.churros} churro(s) y ${t.chocolates} chocolate(s) marcados como entregados.`,
+                buttons: [{ label: 'Aceptar', class: 'flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-bold text-white rounded-xl transition', action: null }]
+            });
         }
 
         function renderValidationHistory() {
@@ -257,7 +293,12 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => { createSnow(); initFirebase(); });
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('PINO_DASH_AUTH') !== '1') {
+                document.querySelectorAll('.nav-restricted').forEach(el => el.classList.add('hidden'));
+            }
+            createSnow(); initFirebase();
+        });
     </script>
 </body>
 </html>

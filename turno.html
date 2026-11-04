@@ -35,17 +35,17 @@
                 </a>
                 <nav class="hidden md:flex space-x-2">
                     <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
-                    <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
+                    <a href="captura.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
                     <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
-                    <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
+                    <a href="validacion.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
                 </nav>
             </div>
         </div>
         <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
             <a href="index.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
-            <a href="captura.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
+            <a href="captura.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
             <a href="turno.html" class="p-2 text-xs text-center text-amber-400"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
-            <a href="validacion.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
+            <a href="validacion.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
         </div>
     </header>
 
@@ -249,7 +249,12 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => { createSnow(); initFirebase(); });
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('PINO_DASH_AUTH') !== '1') {
+                document.querySelectorAll('.nav-restricted').forEach(el => el.classList.add('hidden'));
+            }
+            createSnow(); initFirebase();
+        });
     </script>
 </body>
 </html>

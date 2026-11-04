@@ -22,6 +22,24 @@
 </head>
 <body class="min-h-screen flex flex-col relative">
 
+    <!-- Password Lock Screen -->
+    <div id="lockScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl w-full max-w-sm text-center">
+            <div class="w-16 h-16 bg-santa-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-santa-600/40">🎅</div>
+            <h2 class="text-2xl font-bold font-christmas text-gold-400 mb-1">Encendido del Pino</h2>
+            <p class="text-xs text-slate-400 mb-6">Acceso restringido — Coordinación</p>
+            <div class="relative mb-4">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                <input type="password" id="passwordInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter') checkPassword()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-gold-400 transition text-center tracking-widest">
+            </div>
+            <p id="lockError" class="text-xs text-santa-400 mb-3 hidden">Contraseña incorrecta. Intenta de nuevo.</p>
+            <button onclick="checkPassword()" class="w-full py-3 bg-gradient-to-r from-santa-600 to-santa-700 hover:from-santa-500 hover:to-santa-600 text-white font-bold rounded-xl transition">
+                Entrar
+            </button>
+        </div>
+    </div>
+
     <div id="snowContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
     <header class="no-print bg-slate-900/90 backdrop-blur-md border-b border-pine-800/50 sticky top-0 z-50">
@@ -40,6 +58,11 @@
                     <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
                     <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
                 </nav>
+                <div class="flex items-center gap-2">
+                    <button onclick="lockScreen()" class="px-3 py-2 bg-slate-800 hover:bg-red-900/50 text-slate-300 hover:text-red-400 text-xs rounded-xl flex items-center gap-1.5 transition" title="Bloquear pantalla">
+                        <i class="fa-solid fa-lock"></i> Bloquear
+                    </button>
+                </div>
             </div>
         </div>
         <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
@@ -119,6 +142,16 @@
             </div>
         </div>
     </main>
+
+    <!-- Modal Genérico -->
+    <div id="appModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center">
+            <div id="appModalIcon" class="text-4xl mb-3"></div>
+            <h3 id="appModalTitle" class="text-lg font-bold text-white mb-2"></h3>
+            <p id="appModalMsg" class="text-sm text-slate-300 mb-6"></p>
+            <div id="appModalBtns" class="flex gap-3 justify-center"></div>
+        </div>
+    </div>
 
     <!-- Modal Config Firebase -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -244,12 +277,36 @@
             const url = document.getElementById('cfgDbUrl').value.trim();
             if (url) { localStorage.setItem('PINO_FIREBASE_URL', url); location.reload(); }
         }
+        function showModal({ icon = '', title = '', msg = '', buttons = [] }) {
+            document.getElementById('appModalIcon').innerText = icon;
+            document.getElementById('appModalTitle').innerText = title;
+            document.getElementById('appModalMsg').innerText = msg;
+            const btns = document.getElementById('appModalBtns');
+            btns.innerHTML = '';
+            buttons.forEach(b => {
+                const el = document.createElement('button');
+                el.className = b.class;
+                el.innerText = b.label;
+                el.onclick = () => { document.getElementById('appModal').classList.add('hidden'); b.action && b.action(); };
+                btns.appendChild(el);
+            });
+            document.getElementById('appModal').classList.remove('hidden');
+        }
+
         function resetDataPrompt() {
-            if (confirm("¿Estás seguro de desear reiniciar la base de datos de todos los puestos para el evento?")) {
-                appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
-                if (dbRef) dbRef.set(appState);
-                localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
-            }
+            showModal({
+                icon: '🔄',
+                title: '¿Reiniciar base de datos?',
+                msg: 'Se borrarán todos los tickets y turnos de todos los puestos. Esta acción no se puede deshacer.',
+                buttons: [
+                    { label: 'Cancelar', class: 'flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-sm font-bold text-slate-300 rounded-xl transition', action: null },
+                    { label: 'Sí, reiniciar', class: 'flex-1 px-4 py-2.5 bg-santa-600 hover:bg-santa-500 text-sm font-bold text-white rounded-xl transition', action: () => {
+                        appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
+                        if (dbRef) dbRef.set(appState);
+                        localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
+                    }}
+                ]
+            });
         }
 
         function createSnow() {
@@ -267,7 +324,35 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => { createSnow(); initChart(); initFirebase(); });
+        const DASHBOARD_PASSWORD = 'pino2026';
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === DASHBOARD_PASSWORD) {
+                sessionStorage.setItem('PINO_DASH_AUTH', '1');
+                document.getElementById('lockScreen').classList.add('hidden');
+                document.getElementById('lockError').classList.add('hidden');
+            } else {
+                document.getElementById('lockError').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+
+        function lockScreen() {
+            sessionStorage.removeItem('PINO_DASH_AUTH');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('lockError').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').focus();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('PINO_DASH_AUTH') === '1') {
+                document.getElementById('lockScreen').classList.add('hidden');
+            }
+            createSnow(); initChart(); initFirebase();
+        });
     </script>
 </body>
 </html>

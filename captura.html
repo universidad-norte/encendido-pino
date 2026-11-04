@@ -38,16 +38,16 @@
                 <nav class="hidden md:flex space-x-2">
                     <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
                     <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
-                    <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
-                    <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
+                    <a href="turno.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
+                    <a href="validacion.html" class="nav-restricted nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
                 </nav>
             </div>
         </div>
         <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
             <a href="index.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
             <a href="captura.html" class="p-2 text-xs text-center text-santa-500"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
-            <a href="turno.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
-            <a href="validacion.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
+            <a href="turno.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
+            <a href="validacion.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
         </div>
     </header>
 
@@ -74,11 +74,35 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-semibold text-slate-200 mb-2">Tipo de Persona</label>
+                        <div class="flex gap-3">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="personType" value="Alumno" class="sr-only peer" checked>
+                                <div class="peer-checked:bg-santa-600/30 peer-checked:border-santa-500 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-graduation-cap block text-lg mb-1"></i> Alumno
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="personType" value="Maestro" class="sr-only peer">
+                                <div class="peer-checked:bg-amber-600/30 peer-checked:border-amber-500 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-chalkboard-user block text-lg mb-1"></i> Maestro
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="personType" value="Otro" class="sr-only peer">
+                                <div class="peer-checked:bg-emerald-600/30 peer-checked:border-emerald-500 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-user block text-lg mb-1"></i> Otro
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-semibold text-slate-200 mb-2">Cantidad de Personas en la Foto (Churros & Chocolates)</label>
+                        <input type="hidden" id="inputPeople" value="1">
                         <div class="flex items-center space-x-4">
                             <button type="button" onclick="adjustCount(-1)" class="w-12 h-12 bg-slate-700 hover:bg-slate-600 rounded-xl text-xl font-bold transition flex items-center justify-center text-white">-</button>
-                            <input type="number" id="inputPeople" min="1" max="20" value="1" required
-                                class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-xl font-bold text-gold-400 focus:outline-none focus:border-gold-400">
+                            <div class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-xl font-bold text-gold-400 select-none" id="peopleDisplay">1</div>
                             <button type="button" onclick="adjustCount(1)" class="w-12 h-12 bg-slate-700 hover:bg-slate-600 rounded-xl text-xl font-bold transition flex items-center justify-center text-white">+</button>
                         </div>
                         <p class="text-xs text-slate-400 mt-2">
@@ -177,6 +201,7 @@
             if (val < 1) val = 1;
             if (val > 20) val = 20;
             input.value = val;
+            document.getElementById('peopleDisplay').innerText = val;
             document.getElementById('summaryCount').innerText = val;
             document.getElementById('summaryCountMug').innerText = val;
         }
@@ -185,6 +210,7 @@
             e.preventDefault();
             const nameInput = document.getElementById('inputName');
             const peopleInput = document.getElementById('inputPeople');
+            const personType = document.querySelector('input[name="personType"]:checked')?.value || 'Alumno';
             const name = nameInput.value.trim();
             const people = parseInt(peopleInput.value);
             if (!name || people < 1) return;
@@ -192,7 +218,7 @@
             const folioStr = 'T-' + String(appState.sequenceNumber).padStart(3, '0');
             const ticketId = 'id_' + Date.now();
             const newTicket = {
-                id: ticketId, folio: folioStr, name, people,
+                id: ticketId, folio: folioStr, name, people, personType,
                 churros: people, chocolates: people,
                 photoStatus: 'WAITING', foodClaimed: false,
                 createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -244,7 +270,12 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => { createSnow(); initFirebase(); });
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('PINO_DASH_AUTH') !== '1') {
+                document.querySelectorAll('.nav-restricted').forEach(el => el.classList.add('hidden'));
+            }
+            createSnow(); initFirebase();
+        });
     </script>
 </body>
 </html>
