@@ -64,8 +64,8 @@
                 <div class="flex gap-2">
                     <input type="text" id="inputScanFolio" placeholder="T-001"
                         class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-emerald-400 uppercase">
-                    <button onclick="searchTicketForValidation()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition flex items-center gap-2">
-                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    <button onclick="searchTicketForValidation()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-3 rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i><span class="hidden sm:inline"> Buscar</span>
                     </button>
                 </div>
             </div>
@@ -103,6 +103,14 @@
                 <h3 class="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
                     <i class="fa-solid fa-history mr-1"></i> Historial de Entregas Recientes
                 </h3>
+                <div class="flex gap-2 mb-4">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
+                        <input type="text" id="historySearch" placeholder="Buscar por folio o nombre..."
+                            oninput="renderValidationHistory()"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-8 pr-3 text-sm text-white focus:outline-none focus:border-emerald-400">
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
                         <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700">
@@ -261,9 +269,18 @@
         function renderValidationHistory() {
             const tbody = document.getElementById('valHistoryTable');
             tbody.innerHTML = '';
-            const list = getTicketsArray().filter(t => t.foodClaimed).reverse();
+            const query = (document.getElementById('historySearch')?.value || '').trim().toLowerCase();
+            let list = getTicketsArray().filter(t => t.foodClaimed).reverse();
+            if (query) {
+                list = list.filter(t =>
+                    t.folio.toLowerCase().includes(query) ||
+                    t.name.toLowerCase().includes(query)
+                );
+            } else {
+                list = list.slice(0, 5);
+            }
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 italic">No hay entregas en este puesto aún.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 italic">${query ? 'Sin resultados para "' + query + '".' : 'No hay entregas en este puesto aún.'}</td></tr>`;
                 return;
             }
             list.forEach(t => {
