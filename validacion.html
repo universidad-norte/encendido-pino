@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puesto 3: Churros/Choco - Encendido del Pino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: {
+                pine: { 50:'#f0fdf4',100:'#dcfce7',600:'#16a34a',700:'#15803d',800:'#166534',900:'#14532d' },
+                santa: { 500:'#ef4444',600:'#dc2626',700:'#b91c1c',800:'#991b1b' },
+                gold: { 400:'#facc15',500:'#eab308',600:'#ca8a04' }
+            }}}
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <div id="snowContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <header class="no-print bg-slate-900/90 backdrop-blur-md border-b border-pine-800/50 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-santa-600 rounded-full flex items-center justify-center shadow-lg shadow-santa-600/40 text-2xl">🎅</div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold font-christmas text-gold-400 tracking-wide">Encendido del Pino</h1>
+                        <p class="text-xs text-slate-400">Sistema de Foto con Santa & Tickets</p>
+                    </div>
+                </a>
+                <nav class="hidden md:flex space-x-2">
+                    <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
+                    <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
+                    <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
+                    <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
+                </nav>
+            </div>
+        </div>
+        <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
+            <a href="index.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
+            <a href="captura.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
+            <a href="turno.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
+            <a href="validacion.html" class="p-2 text-xs text-center text-emerald-400"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 z-10">
+        <div class="max-w-3xl mx-auto bg-slate-800/90 backdrop-blur border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-xl">
+            <div class="border-b border-slate-700 pb-4 mb-6 text-center">
+                <span class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-full uppercase">Puesto 3</span>
+                <h2 class="text-2xl font-bold font-christmas text-emerald-400 flex items-center justify-center gap-2 mt-1">
+                    <i class="fa-solid fa-mug-hot text-emerald-400"></i> Entrega de Churros & Chocolates
+                </h2>
+                <p class="text-sm text-slate-400">Escanea o ingresa el folio para autorizar la entrega de alimentos.</p>
+            </div>
+
+            <div class="space-y-4">
+                <label class="block text-sm font-semibold text-slate-300">Escanea o escribe el Folio del Ticket (Ej. T-001)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="inputScanFolio" placeholder="T-001"
+                        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-emerald-400 uppercase">
+                    <button onclick="searchTicketForValidation()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div id="validationResult" class="hidden mt-8 p-6 rounded-2xl bg-slate-900 border border-slate-700 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <span id="valStatusBadge" class="px-3 py-1 text-xs font-bold rounded-full uppercase">Pendiente</span>
+                        <h3 id="valFolio" class="text-3xl font-extrabold text-white mt-2">T-000</h3>
+                    </div>
+                    <div class="text-right">
+                        <div id="valName" class="text-lg font-bold text-slate-200">---</div>
+                        <div class="text-xs text-slate-400">Responsable</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-800/80 p-4 rounded-xl text-center border border-slate-700">
+                        <span class="text-xs text-slate-400 uppercase font-bold">Churros a Entregar</span>
+                        <div id="valChurros" class="text-3xl font-extrabold text-gold-400 mt-1">0</div>
+                    </div>
+                    <div class="bg-slate-800/80 p-4 rounded-xl text-center border border-slate-700">
+                        <span class="text-xs text-slate-400 uppercase font-bold">Vasos de Chocolate</span>
+                        <div id="valChocolates" class="text-3xl font-extrabold text-amber-500 mt-1">0</div>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button id="btnConfirmValidation" onclick="confirmTicketFoodClaim()"
+                        class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-check-circle text-xl"></i> Marcar Entregados en la Nube
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 border-t border-slate-700 pt-6">
+                <h3 class="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
+                    <i class="fa-solid fa-history mr-1"></i> Historial de Entregas Recientes
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700">
+                            <tr>
+                                <th class="py-2 px-3">Folio</th>
+                                <th class="py-2 px-3">Responsable</th>
+                                <th class="py-2 px-3 text-center">Entregados</th>
+                                <th class="py-2 px-3 text-center">Hora Canje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="valHistoryTable" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgmjx_hm3s712V1aTkS46DKepSvQakeF0",
+            authDomain: "encendido-pino.firebaseapp.com",
+            databaseURL: "https://encendido-pino-default-rtdb.firebaseio.com",
+            projectId: "encendido-pino",
+            storageBucket: "encendido-pino.firebasestorage.app",
+            messagingSenderId: "694845523416",
+            appId: "1:694845523416:web:7a69c674bb89309b619ead"
+        };
+
+        let dbRef = null;
+        let appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
+        let currentValidatingTicketId = null;
+
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                dbRef = firebase.database().ref('evento_pino');
+                dbRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        appState.tickets = data.tickets || {};
+                        appState.currentTurnId = data.currentTurnId || null;
+                        appState.sequenceNumber = data.sequenceNumber || 1;
+                    }
+                    renderValidationHistory();
+                });
+            } catch(e) {
+                const stored = localStorage.getItem('PINO_SANTA_APP_LOCAL');
+                if (stored) try { appState = JSON.parse(stored); } catch(e){}
+                renderValidationHistory();
+            }
+        }
+
+        function syncToCloud() {
+            if (dbRef) dbRef.set(appState);
+            localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
+        }
+
+        function getTicketsArray() { return Object.values(appState.tickets || {}); }
+
+        function searchTicketForValidation() {
+            const input = document.getElementById('inputScanFolio');
+            const query = input.value.trim().toUpperCase();
+            if (!query) return;
+
+            const ticket = getTicketsArray().find(t => t.folio.toUpperCase() === query);
+            const resultBox = document.getElementById('validationResult');
+
+            if (!ticket) {
+                alert('⚠️ Ticket no encontrado en la base de datos.');
+                resultBox.classList.add('hidden');
+                return;
+            }
+
+            currentValidatingTicketId = ticket.id;
+            resultBox.classList.remove('hidden');
+            document.getElementById('valFolio').innerText = ticket.folio;
+            document.getElementById('valName').innerText = ticket.name;
+            document.getElementById('valChurros').innerText = ticket.churros;
+            document.getElementById('valChocolates').innerText = ticket.chocolates;
+
+            const badge = document.getElementById('valStatusBadge');
+            const btn = document.getElementById('btnConfirmValidation');
+
+            if (ticket.photoStatus !== 'ATTENDED') {
+                badge.className = "px-3 py-1 text-xs font-bold rounded-full uppercase bg-santa-500/20 text-santa-400 border border-santa-500/30";
+                badge.innerText = "🚫 Foto Pendiente - Pasar primero con Santa";
+                btn.disabled = true;
+                btn.className = "w-full py-4 bg-slate-800 text-slate-500 border border-slate-700 font-bold text-base rounded-xl cursor-not-allowed text-center";
+                btn.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> Debe tomarse la foto antes del canje`;
+                return;
+            }
+
+            if (ticket.foodClaimed) {
+                badge.className = "px-3 py-1 text-xs font-bold rounded-full uppercase bg-gold-500/20 text-gold-400 border border-gold-500/30";
+                badge.innerText = `Alimentos Ya Entregados (${ticket.foodAt || 'Previamente'})`;
+                btn.disabled = true;
+                btn.className = "w-full py-4 bg-slate-800 text-slate-500 border border-slate-700 font-bold text-base rounded-xl cursor-not-allowed text-center";
+                btn.innerHTML = `<i class="fa-solid fa-check-double mr-2"></i> Ticket Ya Canjeado`;
+                return;
+            }
+
+            badge.className = "px-3 py-1 text-xs font-bold rounded-full uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            badge.innerText = "✓ Listo para Entrega";
+            btn.disabled = false;
+            btn.className = "w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3";
+            btn.innerHTML = `<i class="fa-solid fa-check-circle text-xl"></i> Marcar Entregados en la Nube`;
+        }
+
+        function confirmTicketFoodClaim() {
+            if (!currentValidatingTicketId || !appState.tickets[currentValidatingTicketId]) return;
+            appState.tickets[currentValidatingTicketId].foodClaimed = true;
+            appState.tickets[currentValidatingTicketId].foodAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            syncToCloud();
+            const t = appState.tickets[currentValidatingTicketId];
+            alert(`✅ ¡Alimentos entregados para ${t.folio}! (${t.churros} churros y ${t.chocolates} chocolates)`);
+            document.getElementById('inputScanFolio').value = '';
+            document.getElementById('validationResult').classList.add('hidden');
+        }
+
+        function renderValidationHistory() {
+            const tbody = document.getElementById('valHistoryTable');
+            tbody.innerHTML = '';
+            const list = getTicketsArray().filter(t => t.foodClaimed).reverse();
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 italic">No hay entregas en este puesto aún.</td></tr>`;
+                return;
+            }
+            list.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-bold text-gold-400">${t.folio}</td>
+                    <td class="py-2.5 px-3 font-medium text-white">${t.name}</td>
+                    <td class="py-2.5 px-3 text-center text-amber-400 font-semibold">${t.churros} Churros / ${t.chocolates} Chocolates</td>
+                    <td class="py-2.5 px-3 text-center text-xs text-slate-400">${t.foodAt || 'Reciente'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function createSnow() {
+            const container = document.getElementById('snowContainer');
+            for (let i = 0; i < 25; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.innerHTML = '❄';
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                flake.style.animationDelay = (Math.random() * 5) + 's';
+                flake.style.opacity = Math.random();
+                flake.style.fontSize = (Math.random() * 10 + 12) + 'px';
+                container.appendChild(flake);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { createSnow(); initFirebase(); });
+    </script>
+</body>
+</html>
