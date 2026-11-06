@@ -98,6 +98,36 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-semibold text-slate-200 mb-2">Prioridad <span class="text-xs font-normal text-slate-400">(pasan al frente de la fila)</span></label>
+                        <div class="flex gap-3">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="priority" value="normal" class="sr-only peer" checked>
+                                <div class="peer-checked:bg-slate-600/60 peer-checked:border-slate-400 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-user-clock block text-lg mb-1"></i> Normal
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="priority" value="adulto_mayor" class="sr-only peer">
+                                <div class="peer-checked:bg-blue-600/30 peer-checked:border-blue-400 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-person-cane block text-lg mb-1"></i> Adulto Mayor
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="priority" value="ninos" class="sr-only peer">
+                                <div class="peer-checked:bg-pink-600/30 peer-checked:border-pink-400 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-child block text-lg mb-1"></i> Niños &lt;10
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="priority" value="discapacidad" class="sr-only peer">
+                                <div class="peer-checked:bg-purple-600/30 peer-checked:border-purple-400 peer-checked:text-white bg-slate-900 border border-slate-700 rounded-xl py-3 text-center text-sm font-semibold text-slate-400 transition">
+                                    <i class="fa-solid fa-wheelchair block text-lg mb-1"></i> Discapacidad
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-semibold text-slate-200 mb-2">Cantidad de Personas en la Foto (Churros & Chocolates)</label>
                         <input type="hidden" id="inputPeople" value="1">
                         <div class="flex items-center space-x-4">
@@ -211,6 +241,7 @@
             const nameInput = document.getElementById('inputName');
             const peopleInput = document.getElementById('inputPeople');
             const personType = document.querySelector('input[name="personType"]:checked')?.value || 'Alumno';
+            const priority = document.querySelector('input[name="priority"]:checked')?.value || 'normal';
             const name = nameInput.value.trim();
             const people = parseInt(peopleInput.value);
             if (!name || people < 1) return;
@@ -218,7 +249,7 @@
             const folioStr = 'T-' + String(appState.sequenceNumber).padStart(3, '0');
             const ticketId = 'id_' + Date.now();
             const newTicket = {
-                id: ticketId, folio: folioStr, name, people, personType,
+                id: ticketId, folio: folioStr, name, people, personType, priority,
                 churros: people, chocolates: people,
                 photoStatus: 'WAITING', foodClaimed: false,
                 createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

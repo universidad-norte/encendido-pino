@@ -82,6 +82,7 @@
                 <div id="displayCurrentTurnFolio" class="text-7xl sm:text-9xl font-black font-christmas text-gold-400 tracking-wider drop-shadow-lg my-2">---</div>
                 <div id="displayCurrentTurnName" class="text-2xl sm:text-4xl font-extrabold text-white">Esperando turnos...</div>
                 <div id="displayCurrentTurnGroup" class="text-base sm:text-lg text-emerald-400 font-semibold mt-2">-- personas en el grupo</div>
+                <div id="displayCurrentTurnPriority" class="mt-2"></div>
             </div>
             <div class="inline-flex items-center gap-2 bg-pine-800/80 text-pine-100 px-6 py-2 rounded-full text-sm font-medium border border-pine-600">
                 <i class="fa-solid fa-camera text-emerald-400"></i> Dirígete al set fotográfico con tu ticket
@@ -143,6 +144,25 @@
 
         function getTicketsArray() { return Object.values(appState.tickets || {}); }
 
+        const PRIORITY_ORDER = { discapacidad: 0, ninos: 1, adulto_mayor: 2, normal: 3, undefined: 3 };
+
+        function getWaitingQueue() {
+            return getTicketsArray()
+                .filter(t => t.photoStatus === 'WAITING' && t.id !== appState.currentTurnId)
+                .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3));
+        }
+
+        function priorityBadge(priority) {
+            const map = {
+                adulto_mayor: { label: 'Adulto Mayor', cls: 'bg-blue-500/20 text-blue-300 border-blue-500/30', icon: 'fa-person-cane' },
+                ninos:        { label: 'Niños <10',    cls: 'bg-pink-500/20 text-pink-300 border-pink-500/30',  icon: 'fa-child' },
+                discapacidad: { label: 'Discapacidad', cls: 'bg-purple-500/20 text-purple-300 border-purple-500/30', icon: 'fa-wheelchair' },
+            };
+            const p = map[priority];
+            if (!p) return '';
+            return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full border ${p.cls}"><i class="fa-solid ${p.icon}"></i> ${p.label}</span>`;
+        }
+
         function renderTurnScreen() {
             let current = appState.currentTurnId && appState.tickets[appState.currentTurnId]
                 ? appState.tickets[appState.currentTurnId] : null;
@@ -151,10 +171,12 @@
                 document.getElementById('displayCurrentTurnFolio').innerText = current.folio;
                 document.getElementById('displayCurrentTurnName').innerText = current.name;
                 document.getElementById('displayCurrentTurnGroup').innerText = `${current.people} integrante(s) en la foto`;
+                document.getElementById('displayCurrentTurnPriority').innerHTML = priorityBadge(current.priority);
             } else {
                 document.getElementById('displayCurrentTurnFolio').innerText = "---";
                 document.getElementById('displayCurrentTurnName').innerText = "Sin turnos pendientes";
                 document.getElementById('displayCurrentTurnGroup').innerText = "Fila despejada";
+                document.getElementById('displayCurrentTurnPriority').innerHTML = '';
             }
             renderNextTurnsGrid();
         }
@@ -162,7 +184,7 @@
         function renderNextTurnsGrid() {
             const grid = document.getElementById('displayNextTurnsGrid');
             grid.innerHTML = '';
-            const waiting = getTicketsArray().filter(t => t.photoStatus === 'WAITING' && t.id !== appState.currentTurnId).slice(0, 10);
+            const waiting = getWaitingQueue().slice(0, 10);
             for (let i = 0; i < 10; i++) {
                 const ticket = waiting[i];
                 const card = document.createElement('div');
@@ -173,6 +195,7 @@
                             <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Lugar #${i + 1}</span>
                             <div class="text-2xl font-extrabold text-gold-400 font-christmas my-1">${ticket.folio}</div>
                             <div class="text-xs font-semibold text-white truncate">${ticket.name}</div>
+                            <div class="mt-1">${priorityBadge(ticket.priority)}</div>
                         </div>
                         <div class="text-[10px] text-emerald-400 font-medium mt-2">${ticket.people} pers.</div>
                     `;
@@ -188,8 +211,8 @@
             if (appState.currentTurnId && appState.tickets[appState.currentTurnId]) {
                 appState.tickets[appState.currentTurnId].photoStatus = 'ATTENDED';
             }
-            const remaining = getTicketsArray().filter(t => t.photoStatus === 'WAITING');
-            appState.currentTurnId = remaining.length > 0 ? remaining[0].id : null;
+            const next = getWaitingQueue();
+            appState.currentTurnId = next.length > 0 ? next[0].id : null;
             syncToCloud();
             renderTurnScreen();
             callCurrentTurn();
