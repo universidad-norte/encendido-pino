@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encendido del Pino Navideño - Conteo Regresivo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pine: {
+                            500: '#22c55e',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        santa: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        },
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Mountains+of+Christmas:wght@700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at center, #0f172a 0%, #0b1329 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .font-christmas {
+            font-family: 'Mountains of Christmas', cursive;
+        }
+
+        /* Animación Nieve Fall */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            z-index: 1;
+            color: #fff;
+            user-select: none;
+            pointer-events: none;
+            animation-name: snowflakes-fall, snowflakes-shake;
+            animation-duration: 10s, 3s;
+            animation-timing-function: linear, ease-in-out;
+            animation-iteration-count: infinite, infinite;
+        }
+
+        @keyframes snowflakes-fall {
+            0% { top: -10% }
+            100% { top: 100% }
+        }
+
+        @keyframes snowflakes-shake {
+            0%, 100% { transform: translateX(0px) }
+            50% { transform: translateX(80px) }
+        }
+
+        /* Resplandor dorado animado */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.4); }
+            50% { box-shadow: 0 0 70px rgba(250, 204, 21, 0.8); }
+        }
+        .gold-card-glow {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        /* Iluminación de Árbol */
+        @keyframes pine-light {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.8)); }
+            50% { filter: drop-shadow(0 0 35px rgba(250, 204, 21, 1)); }
+        }
+        .tree-glow {
+            animation: pine-light 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center relative min-h-screen p-4 sm:p-8">
+
+    <!-- Animación de Nieve Cayendo -->
+    <div id="snowContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- Encabezado / Logo Institucional -->
+    <header class="z-10 text-center mt-4">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 backdrop-blur-md shadow-lg mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="text-xs uppercase tracking-widest font-bold text-slate-300">Evento Anual Universitario</span>
+        </div>
+        <h1 class="text-4xl sm:text-6xl font-black font-christmas text-gold-400 tracking-wide drop-shadow-lg">
+            🎄 Encendido del Pino 🎅
+        </h1>
+        <p id="preTimerMessage" class="text-slate-300 text-xs sm:text-base md:text-lg mt-2 font-medium whitespace-nowrap overflow-x-auto">
+            ¡Falta poco para iluminar nuestro campus de magia y espíritu navideño!
+        </p>
+    </header>
+
+    <!-- Caja Principal Conteo Regresivo -->
+    <main class="z-10 my-8 w-full max-w-4xl">
+        <div class="bg-slate-900/80 backdrop-blur-xl border-2 border-gold-500/60 rounded-3xl p-6 sm:p-12 text-center gold-card-glow relative overflow-hidden">
+            
+            <!-- Adornos en esquinas -->
+            <div class="absolute -top-6 -left-6 text-5xl opacity-40">🔔</div>
+            <div class="absolute -top-6 -right-6 text-5xl opacity-40">🎁</div>
+            
+            <div id="countdownBox" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 my-4">
+                
+                <!-- Días -->
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 flex flex-col justify-center items-center shadow-inner">
+                    <span id="days" class="text-5xl sm:text-7xl font-black text-white font-christmas tracking-tight">00</span>
+                    <span class="text-xs sm:text-sm font-bold uppercase text-gold-400 tracking-wider mt-2">Días</span>
+                </div>
+
+                <!-- Horas -->
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 flex flex-col justify-center items-center shadow-inner">
+                    <span id="hours" class="text-5xl sm:text-7xl font-black text-white font-christmas tracking-tight">00</span>
+                    <span class="text-xs sm:text-sm font-bold uppercase text-gold-400 tracking-wider mt-2">Horas</span>
+                </div>
+
+                <!-- Minutos -->
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 flex flex-col justify-center items-center shadow-inner">
+                    <span id="minutes" class="text-5xl sm:text-7xl font-black text-white font-christmas tracking-tight">00</span>
+                    <span class="text-xs sm:text-sm font-bold uppercase text-gold-400 tracking-wider mt-2">Minutos</span>
+                </div>
+
+                <!-- Segundos -->
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 flex flex-col justify-center items-center shadow-inner border-santa-500/50">
+                    <span id="seconds" class="text-5xl sm:text-7xl font-black text-santa-500 font-christmas tracking-tight animate-pulse">00</span>
+                    <span class="text-xs sm:text-sm font-bold uppercase text-santa-400 tracking-wider mt-2">Segundos</span>
+                </div>
+
+            </div>
+
+            <!-- Mensaje al terminar el conteo -->
+            <div id="finishedMessage" class="hidden my-8 space-y-4">
+                <div class="text-6xl sm:text-8xl tree-glow">🎄✨</div>
+                <h2 class="text-4xl sm:text-6xl font-extrabold font-christmas text-gold-400 tracking-wide">
+                    ¡FELIZ NAVIDAD! <br>¡EL PINO ESTÁ ENCENDIDO!
+                </h2>
+                <p class="text-lg text-emerald-400 font-bold">Que la luz y alegría iluminen a toda nuestra comunidad.</p>
+            </div>
+
+            <!-- Detalles del Evento -->
+            <div class="mt-8 pt-6 border-t border-slate-800 flex flex-wrap items-center justify-around gap-4 text-xs sm:text-sm text-slate-300">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-day text-gold-400 text-base"></i>
+                    <span><strong>Fecha:</strong> 19 de Noviembre</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-gold-400 text-base"></i>
+                    <span><strong>Hora:</strong> 6:00 PM</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-cookie-bite text-gold-400 text-base"></i>
+                    <span>Fotos con Santa + Churros & Chocolate</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Controles en pie de página para ajustar hora del evento -->
+    <footer class="z-10 text-center space-y-3 mb-2">
+        <div class="inline-flex items-center gap-2 bg-slate-900/60 p-2 rounded-xl border border-slate-800 text-xs text-slate-400">
+            <label for="eventDateInput" class="font-semibold text-slate-300">Ajustar Hora Objetivo:</label>
+            <input type="datetime-local" id="eventDateInput" onchange="updateTargetDate()" class="bg-slate-800 text-white rounded px-2 py-1 border border-slate-700 text-xs focus:outline-none">
+        </div>
+        <p class="text-xs text-slate-500">© Universidad - Coordinación de Eventos Navideños</p>
+    </footer>
+
+    <!-- Script de Lógica del Conteo & Efectos -->
+    <script>
+        // Fecha por defecto: 19 de Noviembre a las 18:00 hrs
+        let currentYear = new Date().getFullYear();
+        let targetDate = new Date(`Nov 19, ${currentYear} 18:00:00`).getTime();
+
+        // Inicializar input datetime con la fecha objetivo
+        const inputDate = document.getElementById('eventDateInput');
+        const defaultISO = new Date(targetDate - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+        inputDate.value = defaultISO;
+
+        function updateTargetDate() {
+            const val = document.getElementById('eventDateInput').value;
+            if (val) {
+                targetDate = new Date(val).getTime();
+            }
+        }
+
+        // Bucle del Conteo Regresivo
+        const timerInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance <= 0) {
+                clearInterval(timerInterval);
+                
+                // 1. Oculta el contador de números (USANDO EL ID CORRECTO: countdownBox)
+                const box = document.getElementById('countdownBox');
+                if (box) box.classList.add('hidden');
+                
+                // 2. Oculta el mensaje previo
+                const msg = document.getElementById('preTimerMessage');
+                if (msg) msg.classList.add('hidden');
+                
+                // 3. Muestra el mensaje final del Pino Encendido
+                const finished = document.getElementById('finishedMessage');
+                if (finished) finished.classList.remove('hidden');
+                
+                // 4. Inicia la animación de confeti (USANDO EL NOMBRE CORRECTO DE FUNCIÓN)
+                triggerCelebration();
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+        }, 1000);
+
+        // Efecto de Confeti al terminar
+        function triggerCelebration() {
+            const duration = 15 * 1000;
+            const animationEnd = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#22c55e', '#ef4444', '#facc15']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#22c55e', '#ef4444', '#facc15']
+                });
+
+                if (Date.now() < animationEnd) {
+                    requestAnimationFrame(frame);
+                }
+            })();
+        }
+
+        // Animación Nieve
+        function createSnow() {
+            const container = document.getElementById('snowContainer');
+            for (let i = 0; i < 30; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.innerHTML = '❄';
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                flake.style.animationDelay = (Math.random() * 5) + 's';
+                flake.style.opacity = Math.random();
+                flake.style.fontSize = (Math.random() * 10 + 12) + 'px';
+                container.appendChild(flake);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', createSnow);
+    </script>
+    
+</body>
+</html>
