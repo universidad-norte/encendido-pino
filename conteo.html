@@ -177,13 +177,32 @@
         </div>
     </main>
 
-    <!-- Controles en pie de página para ajustar hora del evento -->
-    <footer class="z-10 text-center space-y-3 mb-2">
-        <div class="inline-flex items-center gap-2 bg-slate-900/60 p-2 rounded-xl border border-slate-800 text-xs text-slate-400">
-            <label for="eventDateInput" class="font-semibold text-slate-300">Ajustar Hora Objetivo:</label>
-            <input type="datetime-local" id="eventDateInput" onchange="updateTargetDate()" class="bg-slate-800 text-white rounded px-2 py-1 border border-slate-700 text-xs focus:outline-none">
+    <!-- Controles en pie de página: Ajuste de Fecha y Reproductor de Música -->
+    <footer class="z-10 text-center space-y-3 mb-2 w-full max-w-4xl">
+        <div class="flex flex-wrap items-center justify-center gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800 backdrop-blur-md shadow-xl text-xs">
+            
+            <!-- Controles de Audio -->
+            <div class="flex items-center gap-2 pr-4 border-r border-slate-700">
+                <button id="btnPlayPause" onclick="togglePlayPause()" class="w-8 h-8 rounded-full bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold flex items-center justify-center transition shadow-md">
+                    <i id="iconPlayPause" class="fa-solid fa-play ml-0.5"></i>
+                </button>
+                <button onclick="nextTrack()" title="Siguiente canción" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+                <div class="text-left ml-1">
+                    <div id="trackTitle" class="font-bold text-slate-200 truncate max-w-[150px] sm:max-w-[200px]">Música Pausada</div>
+                    <div id="trackStatus" class="text-[10px] text-slate-400">Haz clic en Play para iniciar</div>
+                </div>
+            </div>
+
+            <!-- Selector de Fecha / Hora -->
+            <div class="inline-flex items-center gap-2 text-slate-400">
+                <label for="eventDateInput" class="font-semibold text-slate-300">Hora Objetivo:</label>
+                <input type="datetime-local" id="eventDateInput" onchange="updateTargetDate()" class="bg-slate-800 text-white rounded-lg px-2.5 py-1.5 border border-slate-700 text-xs focus:outline-none focus:border-gold-400">
+            </div>
+
         </div>
-        <p class="text-xs text-slate-500">© Universidad - Coordinación de Eventos Navideños</p>
+        <p class="text-[11px] text-slate-500">© Universidad - Coordinación de Eventos Navideños</p>
     </footer>
 
     <!-- Script de Lógica del Conteo & Efectos -->
@@ -284,6 +303,72 @@
         }
 
         window.addEventListener('DOMContentLoaded', createSnow);
+
+        // ================= REPRODUCTOR DE MÚSICA EN BUCLE =================
+        const playlist = [
+            { title: 'Villancico 1', src: 'musica/1-01.mp3' },
+            { title: 'Villancico 2', src: 'musica/1-02.mp3' },
+            { title: 'Villancico 3', src: 'musica/1-03.mp3' },
+            { title: 'Villancico 4', src: 'musica/1-04.mp3' },
+            { title: 'Villancico 5', src: 'musica/1-05.mp3' },
+            { title: 'Villancico 6', src: 'musica/1-06.mp3' },
+            { title: 'Villancico 7', src: 'musica/1-07.mp3' },
+            { title: 'Villancico 8', src: 'musica/1-08.mp3' },
+            { title: 'Villancico 9', src: 'musica/1-09.mp3' },
+            { title: 'Villancico 10', src: 'musica/1-10.mp3' }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        const audioPlayer = new Audio();
+
+        function loadTrack(index) {
+            if (playlist.length === 0) return;
+            audioPlayer.src = playlist[index].src;
+            audioPlayer.volume = 0.6; // Volumen al 60%
+            document.getElementById('trackTitle').innerText = playlist[index].title;
+        }
+
+        function togglePlayPause() {
+            const icon = document.getElementById('iconPlayPause');
+            const status = document.getElementById('trackStatus');
+
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                icon.className = 'fa-solid fa-play ml-0.5';
+                status.innerText = 'Pausado';
+            } else {
+                if (!audioPlayer.src) loadTrack(currentTrackIndex);
+                
+                audioPlayer.play().then(() => {
+                    isPlaying = true;
+                    icon.className = 'fa-solid fa-pause';
+                    status.innerText = `Reproduciendo (${currentTrackIndex + 1}/${playlist.length})`;
+                }).catch(err => {
+                    console.error("Error al reproducir audio:", err);
+                });
+            }
+        }
+
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) {
+                audioPlayer.play();
+                document.getElementById('trackStatus').innerText = `Reproduciendo (${currentTrackIndex + 1}/${playlist.length})`;
+            }
+        }
+
+        // Evento automático cuando termina una canción -> Pasa a la siguiente en bucle
+        audioPlayer.addEventListener('ended', () => {
+            nextTrack();
+        });
+
+        // Inicializar primer track al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTrack(0);
+        });
     </script>
     
 </body>
