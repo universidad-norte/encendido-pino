@@ -196,13 +196,13 @@
             </div>
 
             <!-- Selector de Fecha / Hora -->
-            <div class="inline-flex items-center gap-2 text-slate-400">
+            <div style="display: none;" class="inline-flex items-center gap-2 text-slate-400">
                 <label for="eventDateInput" class="font-semibold text-slate-300">Hora Objetivo:</label>
                 <input type="datetime-local" id="eventDateInput" onchange="updateTargetDate()" class="bg-slate-800 text-white rounded-lg px-2.5 py-1.5 border border-slate-700 text-xs focus:outline-none focus:border-gold-400">
             </div>
 
         </div>
-        <p class="text-[11px] text-slate-500">© Universidad - Coordinación de Eventos Navideños</p>
+        <p class="text-[11px] text-slate-500">© Universidad del Norte - Coordinación de Eventos Navideños</p>
     </footer>
 
     <!-- Script de Lógica del Conteo & Efectos -->
@@ -306,16 +306,16 @@
 
         // ================= REPRODUCTOR DE MÚSICA EN BUCLE =================
         const playlist = [
-            { title: 'Villancico 1', src: 'musica/1-01.mp3' },
-            { title: 'Villancico 2', src: 'musica/1-02.mp3' },
-            { title: 'Villancico 3', src: 'musica/1-03.mp3' },
-            { title: 'Villancico 4', src: 'musica/1-04.mp3' },
-            { title: 'Villancico 5', src: 'musica/1-05.mp3' },
-            { title: 'Villancico 6', src: 'musica/1-06.mp3' },
-            { title: 'Villancico 7', src: 'musica/1-07.mp3' },
-            { title: 'Villancico 8', src: 'musica/1-08.mp3' },
-            { title: 'Villancico 9', src: 'musica/1-09.mp3' },
-            { title: 'Villancico 10', src: 'musica/1-10.mp3' }
+            { title: `All I Want For Christmas Is You`, src: 'musica/1-01.mp3' },
+            { title: `Santa Claus Is Comin' To Town`, src: 'musica/1-02.mp3' },
+            { title: `Warm & Fuzzy`, src: 'musica/1-03.mp3' },
+            { title: `Ding Dong! Merrily On High`, src: 'musica/1-04.mp3' },
+            { title: `Silent Night`, src: 'musica/1-05.mp3' },
+            { title: `O Come All Ye Faithful`, src: 'musica/1-06.mp3' },
+            { title: `Joy To The World`, src: 'musica/1-07.mp3' },
+            { title: `Little Drummer Boy`, src: 'musica/1-08.mp3' },
+            { title: `Winter Wonderland`, src: 'musica/1-09.mp3' },
+            { title: `Sleigh Ride`, src: 'musica/1-10.mp3' }
         ];
 
         let currentTrackIndex = 0;
@@ -325,7 +325,7 @@
         function loadTrack(index) {
             if (playlist.length === 0) return;
             audioPlayer.src = playlist[index].src;
-            audioPlayer.volume = 0.6; // Volumen al 60%
+            audioPlayer.volume = 0.9; // Volumen al 60%
             document.getElementById('trackTitle').innerText = playlist[index].title;
         }
 
