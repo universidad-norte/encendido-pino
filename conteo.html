@@ -167,7 +167,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-clock text-gold-400 text-base"></i>
-                    <span><strong>Hora:</strong> 6:00 PM</span>
+                    <span><strong>Hora:</strong> 8:00 PM</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-cookie-bite text-gold-400 text-base"></i>
@@ -207,9 +207,8 @@
 
     <!-- Script de Lógica del Conteo & Efectos -->
     <script>
-        // Fecha por defecto: 19 de Noviembre a las 18:00 hrs
         let currentYear = new Date().getFullYear();
-        let targetDate = new Date(`Nov 19, ${currentYear} 18:00:00`).getTime();
+        let targetDate = new Date(`Nov 19, ${currentYear} 20:00:00`).getTime();
 
         // Inicializar input datetime con la fecha objetivo
         const inputDate = document.getElementById('eventDateInput');
