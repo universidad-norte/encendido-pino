@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in Prerregistro - Encendido del Pino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: {
+                pine: { 50:'#f0fdf4',100:'#dcfce7',600:'#16a34a',700:'#15803d',800:'#166534',900:'#14532d' },
+                santa: { 500:'#ef4444',600:'#dc2626',700:'#b91c1c',800:'#991b1b' },
+                gold: { 400:'#facc15',500:'#eab308',600:'#ca8a04' }
+            }}}
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col relative bg-slate-950 text-slate-100">
+
+    <div id="snowContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- Header -->
+    <header class="no-print bg-slate-900/90 backdrop-blur-md border-b border-pine-800/50 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-santa-600 rounded-full flex items-center justify-center shadow-lg shadow-santa-600/40 text-2xl">🎅</div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold font-christmas text-gold-400 tracking-wide">Encendido del Pino</h1>
+                        <p class="text-xs text-slate-400">Módulo de Check-in Rápido (QR Prerregistro)</p>
+                    </div>
+                </a>
+                <nav class="hidden md:flex space-x-2">
+                    <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
+                    <a href="checkin.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-qrcode text-emerald-400"></i> Check-in QR</a>
+                    <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Nuevo</a>
+                    <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno</a>
+                    <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Entrega</a>
+                </nav>
+            </div>
+        </div>
+        <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
+            <a href="index.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
+            <a href="checkin.html" class="p-2 text-xs text-center text-emerald-400"><i class="fa-solid fa-qrcode text-lg block"></i> Check-in</a>
+            <a href="captura.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> Nuevo</a>
+            <a href="turno.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> Turno</a>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 z-10 space-y-6">
+
+        <!-- Barra Superior de Estado -->
+        <div class="no-print bg-slate-900/90 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-full uppercase">
+                    Acceso Rápido • 3 Segundos
+                </span>
+                <span class="text-xs text-slate-400">Prerregistros activados: <strong id="checkedInCounter" class="text-white">0 / 0</strong></span>
+            </div>
+            <div id="connBadge" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Conectando...
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Columna Izquierda: Escáner + Búsqueda Manual -->
+            <div class="no-print lg:col-span-6 bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-5">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold font-christmas text-gold-400 flex items-center gap-2">
+                        <i class="fa-solid fa-camera text-emerald-400"></i> Escanear Pase QR
+                    </h2>
+                    <button type="button" id="btnToggleCamera" onclick="toggleCameraScanner()"
+                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-video"></i> Activar Cámara
+                    </button>
+                </div>
+
+                <!-- Visor de Cámara -->
+                <div class="bg-slate-950 border-2 border-dashed border-slate-700 rounded-2xl overflow-hidden min-h-[240px] flex flex-col items-center justify-center relative">
+                    <div id="qrReader" class="w-full"></div>
+                    <div id="cameraPlaceholder" class="p-6 text-center space-y-2">
+                        <i class="fa-solid fa-qrcode text-4xl text-slate-600"></i>
+                        <p class="text-xs text-slate-400">Presiona <strong>Activar Cámara</strong> para escanear el celular del asistente o usa la búsqueda manual abajo.</p>
+                    </div>
+                </div>
+
+                <!-- Búsqueda Manual -->
+                <div class="pt-2 border-t border-slate-800">
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Búsqueda Manual (Código PRE-XXXXX o Matrícula)</label>
+                    <form onsubmit="handleManualSearch(event)" class="flex gap-2">
+                        <input type="text" id="manualCodeInput" placeholder="Ej. PRE-8K4M2 o A01234567"
+                            class="flex-1 bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white uppercase focus:outline-none focus:border-gold-400">
+                        <button type="submit" class="px-5 py-3 bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold text-sm rounded-xl transition">
+                            Buscar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Alertas de Estado -->
+                <div id="scanFeedback" class="hidden p-4 rounded-2xl text-sm font-semibold"></div>
+            </div>
+
+            <!-- Columna Derecha: Validación Visual & Ticket Asignado -->
+            <div class="lg:col-span-6 space-y-6">
+
+                <!-- Tarjeta de Validación Previa (Aparece al escanear un pase válido) -->
+                <div id="validationCard" class="hidden bg-slate-900/95 border-2 border-gold-500/70 p-6 sm:p-8 rounded-3xl shadow-2xl space-y-5">
+                    <div class="flex items-start justify-between border-b border-slate-800 pb-4">
+                        <div>
+                            <span id="valPreCode" class="px-2.5 py-1 bg-gold-500/20 text-gold-300 text-xs font-extrabold rounded-lg">PRE-00000</span>
+                            <h3 id="valName" class="text-2xl font-black text-white mt-2">Nombre del Asistente</h3>
+                            <p id="valMeta" class="text-xs text-slate-400 mt-0.5">Alumno • Contacto</p>
+                        </div>
+                        <button type="button" onclick="cancelValidation()" class="text-slate-400 hover:text-white text-lg">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Ajuste rápido de personas presentes -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-300 mb-2">Confirmar Personas Presentes (Churros / Chocolates)</label>
+                        <div class="flex items-center space-x-4 max-w-xs">
+                            <button type="button" onclick="adjustValidatedPeople(-1)" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold text-white">-</button>
+                            <div id="valPeopleDisplay" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl py-2.5 text-center text-xl font-black text-gold-400">1</div>
+                            <button type="button" onclick="adjustValidatedPeople(1)" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold text-white">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Verificación física de prioridad -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-300 mb-2">
+                            <i class="fa-solid fa-eye text-amber-400"></i> Verificación Física de Prioridad
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="valPriority" value="normal" class="sr-only peer">
+                                <div class="peer-checked:bg-slate-600 peer-checked:border-slate-300 peer-checked:text-white bg-slate-950 border border-slate-700 rounded-xl py-2.5 text-center text-xs font-bold text-slate-400">
+                                    Normal
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="valPriority" value="adulto_mayor" class="sr-only peer">
+                                <div class="peer-checked:bg-blue-600/40 peer-checked:border-blue-400 peer-checked:text-white bg-slate-950 border border-slate-700 rounded-xl py-2.5 text-center text-xs font-bold text-slate-400">
+                                    Adulto Mayor
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="valPriority" value="ninos" class="sr-only peer">
+                                <div class="peer-checked:bg-pink-600/40 peer-checked:border-pink-400 peer-checked:text-white bg-slate-950 border border-slate-700 rounded-xl py-2.5 text-center text-xs font-bold text-slate-400">
+                                    Niños &lt;10
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="valPriority" value="discapacidad" class="sr-only peer">
+                                <div class="peer-checked:bg-purple-600/40 peer-checked:border-purple-400 peer-checked:text-white bg-slate-950 border border-slate-700 rounded-xl py-2.5 text-center text-xs font-bold text-slate-400">
+                                    Discapacidad
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnConfirmCheckin" onclick="confirmCheckinAndAssignTurn()"
+                        class="w-full py-4 bg-gradient-to-r from-emerald-600 to-pine-700 hover:from-emerald-500 hover:to-pine-600 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check-circle text-xl"></i> Confirmar Check-in y Asignar Turno
+                    </button>
+                </div>
+
+                <!-- Ticket Oficial Generado tras Check-in -->
+                <div id="assignedTicketCard" class="hidden flex flex-col items-center">
+                    <div class="w-full max-w-sm bg-white text-slate-900 p-6 rounded-3xl shadow-2xl border-4 border-dashed border-emerald-600 text-center space-y-3">
+                        <div class="text-xs font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 py-1 px-3 rounded-full inline-block">
+                            ✓ Turno Activado en Fila
+                        </div>
+                        <div>
+                            <span class="text-xs uppercase text-slate-400 font-bold">Tu Turno Oficial</span>
+                            <div id="assignedFolio" class="text-5xl font-black text-slate-900 tracking-wider">T-000</div>
+                        </div>
+                        <div class="bg-slate-100 p-3 rounded-xl">
+                            <div id="assignedName" class="font-bold text-slate-900 text-base">Nombre</div>
+                            <div id="assignedPriority" class="text-xs text-slate-500 mt-0.5">Prioridad</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-amber-900">
+                            <div><div class="text-[11px] font-semibold">Churros</div><div id="assignedChurros" class="text-lg font-black">0</div></div>
+                            <div><div class="text-[11px] font-semibold">Chocolates</div><div id="assignedChocolates" class="text-lg font-black">0</div></div>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div id="assignedQr" class="p-2 bg-white rounded-xl border border-slate-200"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Toma foto a este turno o imprímelo para reclamar tus churros después de la foto.</p>
+
+                        <div class="no-print pt-2 flex gap-2">
+                            <button type="button" onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl">
+                                <i class="fa-solid fa-print"></i> Imprimir
+                            </button>
+                            <button type="button" onclick="shareAssignedWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl">
+                                <i class="fa-brands fa-whatsapp text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado Inicial Vacío -->
+                <div id="idleHintCard" class="bg-slate-900/50 border border-slate-800/80 p-8 rounded-3xl text-center text-slate-500 space-y-2">
+                    <i class="fa-solid fa-ticket text-4xl text-slate-700"></i>
+                    <p class="text-sm font-semibold text-slate-400">Esperando lectura de pase...</p>
+                    <p class="text-xs">Al escanear un código <code class="text-slate-300">PRE-XXXXX</code> aparecerán aquí sus datos para validar y asignar turno.</p>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script src="checkin.js"></script>
+</body>
+</html>
