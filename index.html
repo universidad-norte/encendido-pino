@@ -20,339 +20,270 @@
     </script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="min-h-screen flex flex-col relative">
-
-    <!-- Password Lock Screen -->
-    <div id="lockScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-santa-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-santa-600/40">🎅</div>
-            <h2 class="text-2xl font-bold font-christmas text-gold-400 mb-1">Encendido del Pino</h2>
-            <p class="text-xs text-slate-400 mb-6">Acceso restringido — Coordinación</p>
-            <div class="relative mb-4">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa-solid fa-lock"></i></span>
-                <input type="password" id="passwordInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter') checkPassword()"
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-gold-400 transition text-center tracking-widest">
-            </div>
-            <p id="lockError" class="text-xs text-santa-400 mb-3 hidden">Contraseña incorrecta. Intenta de nuevo.</p>
-            <button onclick="checkPassword()" class="w-full py-3 bg-gradient-to-r from-santa-600 to-santa-700 hover:from-santa-500 hover:to-santa-600 text-white font-bold rounded-xl transition">
-                Entrar
-            </button>
-        </div>
-    </div>
+<body class="min-h-screen flex flex-col relative bg-slate-950 text-slate-100">
 
     <div id="snowContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
-    <header class="no-print bg-slate-900/90 backdrop-blur-md border-b border-pine-800/50 sticky top-0 z-50">
+    <!-- Pantalla de Bloqueo / Password -->
+    <div id="lockScreenModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-8 text-center shadow-2xl space-y-5">
+            <div class="w-16 h-16 bg-santa-600/20 border border-santa-500/40 text-santa-400 rounded-full flex items-center justify-center text-3xl mx-auto">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold font-christmas text-gold-400">Acceso Administrativo</h2>
+                <p class="text-xs text-slate-400 mt-1">Ingresa la contraseña para desbloquear el Dashboard y los controles operativos.</p>
+            </div>
+            <form onsubmit="unlockDashboard(event)" class="space-y-4">
+                <input type="password" id="dashPasswordInput" required placeholder="Contraseña de acceso"
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-center text-lg tracking-widest text-white focus:outline-none focus:border-gold-400">
+                <div id="lockErrorMsg" class="hidden text-xs font-bold text-red-400">Contraseña incorrecta. Intenta de nuevo.</div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-santa-600 to-santa-700 hover:from-santa-500 hover:to-santa-600 text-white font-bold rounded-xl shadow-lg transition">
+                    <i class="fa-solid fa-unlock mr-1"></i> Desbloquear Panel
+                </button>
+            </form>
+            <div class="pt-2 border-t border-slate-800">
+                <a href="preregistrar.html" class="text-xs text-slate-400 hover:text-gold-400 transition">
+                    ¿Eres asistente? Ir a Prerregistro Público <i class="fa-solid fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Principal -->
+    <header class="no-print bg-slate-900/90 backdrop-blur-md border-b border-pine-800/50 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <a href="index.html" class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-santa-600 rounded-full flex items-center justify-center shadow-lg shadow-santa-600/40 text-2xl">🎅</div>
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold font-christmas text-gold-400 tracking-wide">Encendido del Pino</h1>
-                        <p class="text-xs text-slate-400">Sistema de Foto con Santa & Tickets</p>
+                        <p class="text-xs text-slate-400">Panel de Control & Métricas en Tiempo Real</p>
                     </div>
                 </a>
-                <nav class="hidden md:flex space-x-2">
-                    <a href="index.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-white"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
-                    <a href="captura.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> Puesto 1: Captura</a>
-                    <a href="turno.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> Puesto 2: Turno & Fotos</a>
-                    <a href="validacion.html" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> Puesto 3: Churros/Choco</a>
-                </nav>
-                <div class="flex items-center gap-2">
-                    <button onclick="lockScreen()" class="px-3 py-2 bg-slate-800 hover:bg-red-900/50 text-slate-300 hover:text-red-400 text-xs rounded-xl flex items-center gap-1.5 transition" title="Bloquear pantalla">
+
+                <nav class="hidden lg:flex items-center space-x-1.5">
+                    <a href="index.html" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 bg-slate-800 text-white"><i class="fa-solid fa-chart-pie text-gold-400"></i> Dashboard</a>
+                    <a href="checkin.html" class="nav-restricted nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-qrcode text-emerald-400"></i> Check-in QR</a>
+                    <a href="captura.html" class="nav-restricted nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-user-plus text-santa-500"></i> P1: Captura</a>
+                    <a href="turno.html" class="nav-restricted nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-tv text-amber-400"></i> P2: Turno</a>
+                    <a href="validacion.html" class="nav-restricted nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-mug-hot text-emerald-400"></i> P3: Entrega</a>
+                    <a href="lista.html" class="nav-restricted nav-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-list-ol text-sky-400"></i> Lista</a>
+                    <button type="button" onclick="lockDashboard()" title="Bloquear pantalla al ausentarte"
+                        class="ml-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-lock"></i> Bloquear
                     </button>
-                </div>
+                </nav>
+
+                <!-- Botón Bloquear visible también en móvil/tablet -->
+                <button type="button" onclick="lockDashboard()"
+                    class="lg:hidden px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-lock"></i> Bloquear
+                </button>
             </div>
         </div>
-        <div class="md:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
+
+        <!-- Barra móvil -->
+        <div class="lg:hidden flex justify-around bg-slate-900 border-t border-slate-800 p-2">
             <a href="index.html" class="p-2 text-xs text-center text-gold-400"><i class="fa-solid fa-chart-pie text-lg block"></i> Dash</a>
-            <a href="captura.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> P1:Captura</a>
-            <a href="turno.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> P2:Turno</a>
-            <a href="validacion.html" class="p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-mug-hot text-lg block"></i> P3:Entrega</a>
+            <a href="checkin.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-qrcode text-lg block"></i> Check-in</a>
+            <a href="captura.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-user-plus text-lg block"></i> Nuevo</a>
+            <a href="turno.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-tv text-lg block"></i> Turno</a>
+            <a href="lista.html" class="nav-restricted p-2 text-xs text-center text-slate-300"><i class="fa-solid fa-list-ol text-lg block"></i> Lista</a>
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 z-10">
-        <div class="relative bg-gradient-to-r from-pine-900 via-slate-900 to-santa-900 p-6 sm:p-8 rounded-3xl border border-pine-700/40 shadow-2xl overflow-hidden">
-            <div class="relative z-10 max-w-2xl">
-                <span class="px-3 py-1 bg-gold-500/20 text-gold-400 border border-gold-500/30 text-xs font-semibold rounded-full uppercase tracking-wider">🎄 Coordinación Central del Campus</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold font-christmas text-white mt-2">Dashboard en Tiempo Real</h2>
-                <p class="text-slate-300 text-sm sm:text-base mt-2">Supervisión unificada de las 3 estaciones de trabajo en el campus.</p>
+    <main id="dashboardMainContent" class="hidden flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 z-10 space-y-8">
+
+        <!-- Encabezado y Acciones Rápidas -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 p-6 rounded-3xl">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span id="dashConnBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Conectando...
+                    </span>
+                    <span class="text-xs text-slate-400">Base de Datos Blindada</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold font-christmas text-gold-400 mt-1">Resumen Operativo del Evento</h2>
+                <p class="text-xs sm:text-sm text-slate-400">Monitoreo en vivo de prerregistros, activaciones en puerta, fila con Santa e insumos.</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2.5">
+                <a href="preregistrar.html" target="_blank" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-gold-400"></i> Form. Prerregistro
+                </a>
+                <a href="lista.html" class="px-4 py-2.5 bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-xs font-bold text-sky-300 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol"></i> Lista Consecutiva
+                </a>
+                <button type="button" onclick="exportBackupJSON()" class="px-4 py-2.5 bg-pine-700 hover:bg-pine-600 text-xs font-bold text-white rounded-xl transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-download"></i> Respaldo JSON
+                </button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6">
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-5 rounded-2xl shadow-lg">
+        <!-- Bloque 1: Tarjetas de KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
                 <div class="flex items-center justify-between">
-                    <div><p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Grupos</p><h3 id="stat-total-groups" class="text-3xl font-extrabold text-white mt-1">0</h3></div>
-                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-users"></i></div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Prerregistrados</span>
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-3"><i class="fa-solid fa-ticket text-blue-400 mr-1"></i> Registrados en Puesto 1</p>
+                <div id="statPreregTotal" class="text-4xl font-black text-white mt-3">0</div>
+                <p id="statPreregPeople" class="text-xs text-slate-400 mt-1">0 personas proyectadas</p>
             </div>
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-5 rounded-2xl shadow-lg">
+
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
                 <div class="flex items-center justify-between">
-                    <div><p class="text-xs uppercase font-bold text-emerald-400 tracking-wider">Fotos Tomadas</p><h3 id="stat-attended" class="text-3xl font-extrabold text-emerald-400 mt-1">0</h3></div>
-                    <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-camera"></i></div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Check-in Realizados</span>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-3"><i class="fa-solid fa-check-circle text-emerald-400 mr-1"></i> Atendidos en Puesto 2</p>
+                <div class="flex items-baseline gap-2 mt-3">
+                    <span id="statCheckedIn" class="text-4xl font-black text-emerald-400">0</span>
+                    <span id="statCheckinRate" class="text-xs font-bold text-slate-400">(0%)</span>
+                </div>
+                <p id="statPendingCheckin" class="text-xs text-slate-400 mt-1">0 pases aún sin llegar</p>
             </div>
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-5 rounded-2xl shadow-lg">
+
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
                 <div class="flex items-center justify-between">
-                    <div><p class="text-xs uppercase font-bold text-gold-400 tracking-wider">Insumos Canjeados</p><h3 id="stat-food-claimed" class="text-3xl font-extrabold text-gold-400 mt-1">0</h3></div>
-                    <div class="w-12 h-12 bg-gold-500/20 text-gold-400 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-mug-hot"></i></div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Turnos en Fila (T-XXX)</span>
+                    <div class="w-10 h-10 rounded-2xl bg-gold-500/20 text-gold-400 flex items-center justify-center">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-3"><i class="fa-solid fa-cookie-bite text-amber-500 mr-1"></i> Entregados en Puesto 3</p>
+                <div id="statTotalTickets" class="text-4xl font-black text-gold-400 mt-3">0</div>
+                <p id="statQueueBreakdown" class="text-xs text-slate-400 mt-1">0 en espera • 0 atendidos</p>
             </div>
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-5 rounded-2xl shadow-lg">
+
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
                 <div class="flex items-center justify-between">
-                    <div><p class="text-xs uppercase font-bold text-santa-400 tracking-wider">Pendientes Fila</p><h3 id="stat-pending" class="text-3xl font-extrabold text-santa-400 mt-1">0</h3></div>
-                    <div class="w-12 h-12 bg-santa-500/20 text-santa-400 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Churros & Chocolates</span>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <i class="fa-solid fa-mug-hot"></i>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-3"><i class="fa-solid fa-hourglass-half text-santa-400 mr-1"></i> Esperando su foto</p>
+                <div id="statFoodActive" class="text-4xl font-black text-amber-400 mt-3">0</div>
+                <p id="statFoodDetail" class="text-xs text-slate-400 mt-1">0 entregados • 0 estimados prerreg.</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-6 rounded-2xl shadow-lg">
-                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-gold-400"></i> Avance del Evento</h3>
-                <div class="relative flex justify-center items-center h-64"><canvas id="statusChart"></canvas></div>
+        <!-- Bloque 2: Gráficas en Tiempo Real -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
+                <h3 class="text-base font-bold text-gold-400 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Estatus de Turnos y Prerregistros
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Comparativa en vivo de atención en escenario vs. pases pendientes.</p>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
             </div>
-            <div class="lg:col-span-2 bg-slate-800/80 backdrop-blur border border-slate-700/60 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list text-pine-400"></i> Últimos Tickets Registrados</h3>
-                        <a href="captura.html" class="text-xs bg-santa-600 hover:bg-santa-700 text-white px-3 py-1.5 rounded-lg transition font-medium">+ Nuevo Registro</a>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700">
-                                <tr>
-                                    <th class="py-3 px-3">Folio</th>
-                                    <th class="py-3 px-3">Responsable</th>
-                                    <th class="py-3 px-3 text-center">Insumos</th>
-                                    <th class="py-3 px-3 text-center">Foto</th>
-                                    <th class="py-3 px-3 text-center">Churros</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboardRecentTable" class="divide-y divide-slate-700/50"></tbody>
-                        </table>
-                    </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-lg">
+                <h3 class="text-base font-bold text-gold-400 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column"></i> Turnos Activos por Prioridad
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Distribución actual en cola según tipo de acceso.</p>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="priorityChart"></canvas>
                 </div>
             </div>
         </div>
+
+        <!-- Bloque 3: Accesos Directos a Estaciones -->
+        <div>
+            <h3 class="text-lg font-bold font-christmas text-gold-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-compass"></i> Estaciones de Operación
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <a href="checkin.html" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Módulo Check-in QR</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Escanea pases <code class="text-slate-300">PRE-XXXXX</code> con cámara móvil, valida prioridad física y asigna turno en 3 segundos.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-emerald-400 flex items-center gap-1">
+                        Abrir Escáner <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="captura.html" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-santa-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-santa-600/20 text-santa-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Puesto 1: Registro Directo</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Captura rápida en sitio para asistentes que llegaron sin prerregistro previo.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-santa-400 flex items-center gap-1">
+                        Ir a Captura <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="turno.html" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-tv"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Puesto 2: Pantalla & Turnos</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Control de escenario con voz, fila prioritaria, rezagados y modo contingencia offline integrado.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-amber-400 flex items-center gap-1">
+                        Abrir Pantalla <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="validacion.html" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-pine-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-pine-600/20 text-pine-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-mug-hot"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Puesto 3: Churros & Chocolate</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Validación de tickets <code class="text-slate-300">T-XXX</code> para entrega de alimentos sin duplicidad.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-pine-400 flex items-center gap-1">
+                        Ir a Entrega <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="lista.html" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-sky-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-list-ol"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Lista Consecutiva de Tickets</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Vista auditoría con el orden consecutivo completo de todos los folios emitidos y su estatus.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-sky-400 flex items-center gap-1">
+                        Ver Lista Completa <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="preregistrar.html" target="_blank" class="group bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-purple-500/50 p-6 rounded-3xl transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">Portal Público Prerregistro</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Enlace externo para difundir antes del evento y generar pases <code class="text-slate-300">PRE-XXXXX</code>.</p>
+                    </div>
+                    <div class="mt-4 text-xs font-bold text-purple-400 flex items-center gap-1">
+                        Abrir Portal <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
     </main>
 
-    <!-- Modal Genérico -->
-    <div id="appModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center">
-            <div id="appModalIcon" class="text-4xl mb-3"></div>
-            <h3 id="appModalTitle" class="text-lg font-bold text-white mb-2"></h3>
-            <p id="appModalMsg" class="text-sm text-slate-300 mb-6"></p>
-            <div id="appModalBtns" class="flex gap-3 justify-center"></div>
-        </div>
-    </div>
-
-    <!-- Modal Config Firebase -->
-    <div id="configModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 max-w-md w-full rounded-2xl p-6 shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-cloud text-gold-400"></i> Configuración Firebase Realtime DB</h3>
-            <p class="text-xs text-slate-400 mb-4">Si deseas usar tu propia base de datos de Firebase, ingresa los datos de tu proyecto.</p>
-            <div><label class="block text-xs font-bold text-slate-300 mb-1">Database URL (rtbd)</label>
-            <input type="text" id="cfgDbUrl" placeholder="https://tu-proyecto.firebaseio.com" class="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-2.5"></div>
-            <div class="mt-6 flex justify-end gap-2">
-                <button onclick="closeConfigModal()" class="px-4 py-2 bg-slate-700 text-xs font-bold text-slate-300 rounded-lg">Cerrar</button>
-                <button onclick="saveFirebaseConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white rounded-lg">Guardar y Conectar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBgmjx_hm3s712V1aTkS46DKepSvQakeF0",
-            authDomain: "encendido-pino.firebaseapp.com",
-            databaseURL: "https://encendido-pino-default-rtdb.firebaseio.com",
-            projectId: "encendido-pino",
-            storageBucket: "encendido-pino.firebasestorage.app",
-            messagingSenderId: "694845523416",
-            appId: "1:694845523416:web:7a69c674bb89309b619ead"
-        };
-
-        let dbRef = null;
-        let appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
-
-        function initFirebase() {
-            try {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                dbRef = firebase.database().ref('evento_pino');
-                dbRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        appState.tickets = data.tickets || {};
-                        appState.currentTurnId = data.currentTurnId || null;
-                        appState.sequenceNumber = data.sequenceNumber || 1;
-                    }
-                    onDataUpdated();
-                });
-            } catch(e) {
-                const stored = localStorage.getItem('PINO_SANTA_APP_LOCAL');
-                if (stored) try { appState = JSON.parse(stored); } catch(e){}
-                onDataUpdated();
-            }
-        }
-
-        function onDataUpdated() {
-            renderDashboard();
-            renderRecentDashboardTable();
-            updateChart();
-        }
-
-        function getTicketsArray() { return Object.values(appState.tickets || {}); }
-
-        function renderDashboard() {
-            const list = getTicketsArray();
-            document.getElementById('stat-total-groups').innerText = list.length;
-            document.getElementById('stat-attended').innerText = list.filter(t => t.photoStatus === 'ATTENDED').length;
-            document.getElementById('stat-food-claimed').innerText = list.filter(t => t.foodClaimed).length;
-            document.getElementById('stat-pending').innerText = list.filter(t => t.photoStatus === 'WAITING').length;
-        }
-
-        function renderRecentDashboardTable() {
-            const tbody = document.getElementById('dashboardRecentTable');
-            tbody.innerHTML = '';
-            const list = getTicketsArray().reverse().slice(0, 5);
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500 italic">No hay registros cargados.</td></tr>`;
-                return;
-            }
-            list.forEach(ticket => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/40 transition";
-                const photoBadge = ticket.photoStatus === 'ATTENDED'
-                    ? '<span class="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Listo</span>'
-                    : '<span class="px-2 py-0.5 text-xs rounded-full bg-santa-500/20 text-santa-400 border border-santa-500/30">En Espera</span>';
-                const foodBadge = ticket.foodClaimed
-                    ? '<span class="px-2 py-0.5 text-xs rounded-full bg-gold-500/20 text-gold-400 border border-gold-500/30">Entregado</span>'
-                    : '<span class="px-2 py-0.5 text-xs rounded-full bg-slate-700 text-slate-400">Pendiente</span>';
-                tr.innerHTML = `
-                    <td class="py-3 px-3 font-bold text-gold-400">${ticket.folio}</td>
-                    <td class="py-3 px-3 font-medium text-white">${ticket.name}</td>
-                    <td class="py-3 px-3 text-center text-xs text-amber-400 font-bold">${ticket.churros} C / ${ticket.chocolates} Ch</td>
-                    <td class="py-3 px-3 text-center">${photoBadge}</td>
-                    <td class="py-3 px-3 text-center">${foodBadge}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        let statusChartInstance = null;
-        function initChart() {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            statusChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['En Fila', 'Fotos Tomadas'],
-                    datasets: [{ data: [0, 0], backgroundColor: ['#ef4444', '#10b981'], borderColor: '#1e293b', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } } }
-            });
-        }
-
-        function updateChart() {
-            if (!statusChartInstance) return;
-            const list = getTicketsArray();
-            statusChartInstance.data.datasets[0].data = [
-                list.filter(t => t.photoStatus === 'WAITING').length,
-                list.filter(t => t.photoStatus === 'ATTENDED').length
-            ];
-            statusChartInstance.update();
-        }
-
-        function openConfigModal() {
-            document.getElementById('configModal').classList.remove('hidden');
-            document.getElementById('cfgDbUrl').value = localStorage.getItem('PINO_FIREBASE_URL') || firebaseConfig.databaseURL;
-        }
-        function closeConfigModal() { document.getElementById('configModal').classList.add('hidden'); }
-        function saveFirebaseConfig() {
-            const url = document.getElementById('cfgDbUrl').value.trim();
-            if (url) { localStorage.setItem('PINO_FIREBASE_URL', url); location.reload(); }
-        }
-        function showModal({ icon = '', title = '', msg = '', buttons = [] }) {
-            document.getElementById('appModalIcon').innerText = icon;
-            document.getElementById('appModalTitle').innerText = title;
-            document.getElementById('appModalMsg').innerText = msg;
-            const btns = document.getElementById('appModalBtns');
-            btns.innerHTML = '';
-            buttons.forEach(b => {
-                const el = document.createElement('button');
-                el.className = b.class;
-                el.innerText = b.label;
-                el.onclick = () => { document.getElementById('appModal').classList.add('hidden'); b.action && b.action(); };
-                btns.appendChild(el);
-            });
-            document.getElementById('appModal').classList.remove('hidden');
-        }
-
-        function resetDataPrompt() {
-            showModal({
-                icon: '🔄',
-                title: '¿Reiniciar base de datos?',
-                msg: 'Se borrarán todos los tickets y turnos de todos los puestos. Esta acción no se puede deshacer.',
-                buttons: [
-                    { label: 'Cancelar', class: 'flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-sm font-bold text-slate-300 rounded-xl transition', action: null },
-                    { label: 'Sí, reiniciar', class: 'flex-1 px-4 py-2.5 bg-santa-600 hover:bg-santa-500 text-sm font-bold text-white rounded-xl transition', action: () => {
-                        appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
-                        if (dbRef) dbRef.set(appState);
-                        localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
-                    }}
-                ]
-            });
-        }
-
-        function createSnow() {
-            const container = document.getElementById('snowContainer');
-            for (let i = 0; i < 25; i++) {
-                const flake = document.createElement('div');
-                flake.className = 'snowflake';
-                flake.innerHTML = '❄';
-                flake.style.left = Math.random() * 100 + 'vw';
-                flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
-                flake.style.animationDelay = (Math.random() * 5) + 's';
-                flake.style.opacity = Math.random();
-                flake.style.fontSize = (Math.random() * 10 + 12) + 'px';
-                container.appendChild(flake);
-            }
-        }
-
-        const DASHBOARD_PASSWORD = 'pino2026';
-
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            if (input === DASHBOARD_PASSWORD) {
-                sessionStorage.setItem('PINO_DASH_AUTH', '1');
-                document.getElementById('lockScreen').classList.add('hidden');
-                document.getElementById('lockError').classList.add('hidden');
-            } else {
-                document.getElementById('lockError').classList.remove('hidden');
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
-            }
-        }
-
-        function lockScreen() {
-            sessionStorage.removeItem('PINO_DASH_AUTH');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('lockError').classList.add('hidden');
-            document.getElementById('lockScreen').classList.remove('hidden');
-            document.getElementById('passwordInput').focus();
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('PINO_DASH_AUTH') === '1') {
-                document.getElementById('lockScreen').classList.add('hidden');
-            }
-            createSnow(); initChart(); initFirebase();
-        });
-    </script>
+    <script src="index.js"></script>
 </body>
 </html>
