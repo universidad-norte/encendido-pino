@@ -140,7 +140,7 @@
                         </p>
                     </div>
 
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-santa-600 to-santa-700 hover:from-santa-500 hover:to-santa-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-santa-600/30 transition flex items-center justify-center gap-3">
+                    <button type="submit" id="btnSubmitTicket" class="w-full py-4 bg-gradient-to-r from-santa-600 to-santa-700 hover:from-santa-500 hover:to-santa-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-santa-600/30 transition flex items-center justify-center gap-3">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Registrar e Imprimir Ticket
                     </button>
                 </form>
@@ -199,30 +199,42 @@
             appId: "1:694845523416:web:7a69c674bb89309b619ead"
         };
 
+        // CAMBIA ESTE NÚMERO AL FOLIO MÍNIMO DESDE DONDE QUIERES ARRANCAR
+        const FORZAR_INICIO = 120;
+
         let dbRef = null;
-        let appState = { tickets: {}, currentTurnId: null, sequenceNumber: 1 };
+        let appState = { tickets: {}, currentTurnId: null, sequenceNumber: FORZAR_INICIO };
+
+        function getHighestFolioNumber(ticketsObj) {
+            let maxFolio = 0;
+            Object.values(ticketsObj || {}).forEach(t => {
+                if (t && t.folio) {
+                    const num = parseInt(String(t.folio).replace(/\D/g, ''), 10);
+                    if (!isNaN(num) && num > maxFolio) maxFolio = num;
+                }
+            });
+            return maxFolio;
+        }
 
         function initFirebase() {
             try {
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 dbRef = firebase.database().ref('evento_pino');
-                dbRef.once('value', (snapshot) => {
+                
+                dbRef.on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         appState.tickets = data.tickets || {};
                         appState.currentTurnId = data.currentTurnId || null;
-                        appState.sequenceNumber = data.sequenceNumber || 1;
+                        
+                        const maxExisting = getHighestFolioNumber(appState.tickets);
+                        appState.sequenceNumber = Math.max(data.sequenceNumber || 1, maxExisting + 1, FORZAR_INICIO);
                     }
                 });
             } catch(e) {
                 const stored = localStorage.getItem('PINO_SANTA_APP_LOCAL');
                 if (stored) try { appState = JSON.parse(stored); } catch(e){}
             }
-        }
-
-        function syncToCloud() {
-            if (dbRef) dbRef.set(appState);
-            localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
         }
 
         function adjustCount(delta) {
@@ -246,7 +258,10 @@
             const people = parseInt(peopleInput.value);
             if (!name || people < 1) return;
 
-            const folioStr = 'T-' + String(appState.sequenceNumber).padStart(3, '0');
+            const maxExisting = getHighestFolioNumber(appState.tickets);
+            const nextNum = Math.max(appState.sequenceNumber || 1, maxExisting + 1, FORZAR_INICIO);
+
+            const folioStr = 'T-' + String(nextNum).padStart(3, '0');
             const ticketId = 'id_' + Date.now();
             const newTicket = {
                 id: ticketId, folio: folioStr, name, people, personType, priority,
@@ -257,10 +272,18 @@
 
             if (!appState.tickets) appState.tickets = {};
             appState.tickets[ticketId] = newTicket;
-            appState.sequenceNumber += 1;
-            if (!appState.currentTurnId) appState.currentTurnId = ticketId;
+            appState.sequenceNumber = nextNum + 1;
 
-            syncToCloud();
+            if (dbRef) {
+                dbRef.child('tickets').child(ticketId).set(newTicket);
+                dbRef.child('sequenceNumber').set(nextNum + 1);
+                if (!appState.currentTurnId) {
+                    appState.currentTurnId = ticketId;
+                    dbRef.child('currentTurnId').set(ticketId);
+                }
+            }
+            localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
+
             renderTicketPreview(newTicket);
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
 

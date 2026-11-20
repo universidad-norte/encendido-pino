@@ -61,6 +61,9 @@
                 </select>
             </div>
             <div id="operatorControlsGroup" class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <button onclick="fixQueueToFirst()" title="Pone al frente al primer turno en espera según prioridad y folio" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-1-9"></i> Ir al 1° en Fila
+                </button>
                 <button onclick="playTurnSound()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg transition text-slate-200 flex items-center gap-2">
                     <i class="fa-solid fa-bell text-gold-400"></i> Campana
                 </button>
@@ -152,8 +155,10 @@
             }
         }
 
-        function syncToCloud() {
-            if (dbRef) dbRef.set(appState);
+        function syncTurnUpdates(updates) {
+            if (dbRef) {
+                dbRef.update(updates);
+            }
             localStorage.setItem('PINO_SANTA_APP_LOCAL', JSON.stringify(appState));
         }
 
@@ -161,18 +166,39 @@
 
         const PRIORITY_ORDER = { discapacidad: 0, ninos: 1, adulto_mayor: 2, normal: 3, undefined: 3 };
 
-        // Cola normal en espera (excluye ATTENDED, PENDING y el turno actual)
-        function getWaitingQueue() {
-            return getTicketsArray()
-                .filter(t => t.photoStatus === 'WAITING' && t.id !== appState.currentTurnId)
-                .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3));
+        function getFolioNum(folio) {
+            return parseInt(String(folio || '0').replace(/\D/g, ''), 10) || 0;
         }
 
-        // Lista de turnos saltados / pendientes
+        function sortTicketsByPriorityAndFolio(list) {
+            return list.sort((a, b) => {
+                const prioDiff = (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
+                if (prioDiff !== 0) return prioDiff;
+                return getFolioNum(a.folio) - getFolioNum(b.folio);
+            });
+        }
+
+        function getWaitingQueue() {
+            const waiting = getTicketsArray()
+                .filter(t => t.photoStatus === 'WAITING' && t.id !== appState.currentTurnId);
+            return sortTicketsByPriorityAndFolio(waiting);
+        }
+
         function getPendingQueue() {
             return getTicketsArray()
                 .filter(t => t.photoStatus === 'PENDING' && t.id !== appState.currentTurnId)
-                .sort((a, b) => a.folio.localeCompare(b.folio));
+                .sort((a, b) => getFolioNum(a.folio) - getFolioNum(b.folio));
+        }
+
+        function fixQueueToFirst() {
+            const allWaiting = sortTicketsByPriorityAndFolio(
+                getTicketsArray().filter(t => t.photoStatus === 'WAITING')
+            );
+            if (allWaiting.length > 0) {
+                appState.currentTurnId = allWaiting[0].id;
+                syncTurnUpdates({ currentTurnId: allWaiting[0].id });
+                renderTurnScreen();
+            }
         }
 
         function priorityBadge(priority) {
@@ -271,50 +297,59 @@
             });
         }
 
-        // 1. Foto completada -> Marca ATTENDED y llama al siguiente en fila normal
         function advanceNextTurn() {
+            const updates = {};
             if (appState.currentTurnId && appState.tickets[appState.currentTurnId]) {
                 appState.tickets[appState.currentTurnId].photoStatus = 'ATTENDED';
+                updates[`tickets/${appState.currentTurnId}/photoStatus`] = 'ATTENDED';
             }
             const next = getWaitingQueue();
             appState.currentTurnId = next.length > 0 ? next[0].id : null;
-            syncToCloud();
+            updates['currentTurnId'] = appState.currentTurnId;
+
+            syncTurnUpdates(updates);
             renderTurnScreen();
             callCurrentTurn();
         }
 
-        // 2. La persona no llegó -> Mueve el turno actual a PENDING y llama al siguiente
         function moveCurrentToPending() {
             if (!appState.currentTurnId || !appState.tickets[appState.currentTurnId]) return;
 
+            const updates = {};
             appState.tickets[appState.currentTurnId].photoStatus = 'PENDING';
+            updates[`tickets/${appState.currentTurnId}/photoStatus`] = 'PENDING';
             
             const next = getWaitingQueue();
             appState.currentTurnId = next.length > 0 ? next[0].id : null;
-            syncToCloud();
+            updates['currentTurnId'] = appState.currentTurnId;
+
+            syncTurnUpdates(updates);
             renderTurnScreen();
             callCurrentTurn();
         }
 
-        // 3. Regresa una persona de PENDIENTES -> Toma el escenario de inmediato con preferencia
         function rescuePendingTurn(ticketId) {
             const rescuedTicket = appState.tickets[ticketId];
             if (!rescuedTicket) return;
 
-            // Si había alguien actualmente en pantalla que aún no se toma la foto, se regresa a WAITING (no pierde su turno)
+            const updates = {};
             if (appState.currentTurnId && appState.tickets[appState.currentTurnId] && appState.currentTurnId !== ticketId) {
                 const displaced = appState.tickets[appState.currentTurnId];
                 if (displaced.photoStatus !== 'ATTENDED') {
                     displaced.photoStatus = 'WAITING';
+                    updates[`tickets/${appState.currentTurnId}/photoStatus`] = 'WAITING';
                 }
             }
 
-            // Activamos al ticket rescatado en el escenario
             rescuedTicket.photoStatus = 'WAITING';
             rescuedTicket.wasPending = true;
             appState.currentTurnId = ticketId;
 
-            syncToCloud();
+            updates[`tickets/${ticketId}/photoStatus`] = 'WAITING';
+            updates[`tickets/${ticketId}/wasPending`] = true;
+            updates['currentTurnId'] = ticketId;
+
+            syncTurnUpdates(updates);
             renderTurnScreen();
             callCurrentTurn();
         }
@@ -356,7 +391,7 @@
         function toggleOperatorControls() {
             const mode = document.getElementById('screenModeSelect').value;
             document.getElementById('operatorControlsGroup').classList.toggle('hidden', mode === 'display');
-            renderPendingTurnsGrid(); // Oculta/muestra los botones "Pasar Ahora" según el modo
+            renderPendingTurnsGrid();
         }
 
         function createSnow() {
