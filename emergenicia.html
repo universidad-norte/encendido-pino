@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnero Secuencial Rápido - Encendido del Pino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-4 sm:p-8 select-none">
+
+    <!-- Barra Superior de Control -->
+    <header class="max-w-6xl w-full mx-auto bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-xl">🎅</div>
+            <div>
+                <h1 class="font-bold text-amber-400 text-lg leading-tight">Encendido del Pino</h1>
+                <p class="text-xs text-slate-400">Turnero Secuencial (Modo Seguro Local)</p>
+            </div>
+        </div>
+
+        <!-- Ajuste Manual Rápido de Número -->
+        <div class="flex flex-wrap items-center gap-2">
+            <label for="manualInput" class="text-xs text-slate-300 font-semibold">Ir al turno #:</label>
+            <input type="number" id="manualInput" min="1" placeholder="Ej. 45"
+                class="w-24 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-amber-400">
+            <button onclick="setManualTurn()" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-xl transition">
+                Fijar
+            </button>
+        </div>
+    </header>
+
+    <!-- Pantalla Gigante Central -->
+    <main class="max-w-5xl w-full mx-auto my-auto py-8 text-center space-y-8">
+        <div class="bg-gradient-to-b from-emerald-950 to-slate-900 border-4 border-amber-400/80 rounded-3xl p-8 sm:p-14 shadow-2xl">
+            <div class="inline-block px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-extrabold uppercase tracking-widest mb-4">
+                🎅 Pasar a la foto con Santa
+            </div>
+
+            <div class="text-slate-400 text-sm sm:text-lg uppercase font-bold tracking-wider">Turno Actual</div>
+            <div id="turnDisplay" class="text-8xl sm:text-[11rem] font-black text-amber-400 tracking-wider leading-none my-4 drop-shadow-lg">
+                T-001
+            </div>
+
+            <div class="text-base sm:text-xl text-emerald-300 font-semibold">
+                Siguiente en prepararse: <span id="nextTurnDisplay" class="font-black text-white">T-002</span>
+            </div>
+        </div>
+
+        <!-- Botonera Gigante para el Operador -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <button onclick="prevTurn()" class="py-5 px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-95">
+                <i class="fa-solid fa-backward-step text-slate-400"></i> Anterior (-1)
+            </button>
+
+            <button onclick="announceTurn()" class="py-5 px-6 bg-amber-600 hover:bg-amber-500 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg shadow-amber-600/30 transition active:scale-95">
+                <i class="fa-solid fa-bullhorn"></i> Re-llamar Voz
+            </button>
+
+            <button onclick="nextTurn()" class="py-5 px-6 bg-red-600 hover:bg-red-500 rounded-2xl font-extrabold text-xl flex items-center justify-center gap-3 shadow-lg shadow-red-600/40 transition active:scale-95">
+                Siguiente (+1) <i class="fa-solid fa-forward-step"></i>
+            </button>
+        </div>
+
+        <p class="text-xs text-slate-500">
+            Atajo de teclado: Presiona <kbd class="px-2 py-0.5 bg-slate-800 rounded text-slate-300">Espacio</kbd> o <kbd class="px-2 py-0.5 bg-slate-800 rounded text-slate-300">Flecha Derecha →</kbd> para avanzar al siguiente turno.
+        </p>
+    </main>
+
+    <!-- Historial Reciente -->
+    <footer class="max-w-5xl w-full mx-auto bg-slate-900/70 border border-slate-800/80 p-3 rounded-2xl flex items-center justify-between text-xs text-slate-400">
+        <span>Últimos llamados: <strong id="historyList" class="text-slate-200">Ninguno</strong></span>
+        <button onclick="resetAll()" class="text-red-400 hover:underline">Reiniciar a T-001</button>
+    </footer>
+
+    <script>
+        let currentNumber = parseInt(localStorage.getItem('EMERGENCIA_PINO_TURN') || '1', 10);
+        let history = JSON.parse(localStorage.getItem('EMERGENCIA_PINO_HIST') || '[]');
+
+        function formatFolio(num) {
+            return 'T-' + String(num).padStart(3, '0');
+        }
+
+        function updateScreen(shouldSpeak = false) {
+            document.getElementById('turnDisplay').innerText = formatFolio(currentNumber);
+            document.getElementById('nextTurnDisplay').innerText = formatFolio(currentNumber + 1);
+            document.getElementById('historyList').innerText = history.length ? history.join(' → ') : 'Ninguno';
+            
+            localStorage.setItem('EMERGENCIA_PINO_TURN', currentNumber);
+            localStorage.setItem('EMERGENCIA_PINO_HIST', JSON.stringify(history));
+
+            if (shouldSpeak) announceTurn();
+        }
+
+        function nextTurn() {
+            history.push(formatFolio(currentNumber));
+            if (history.length > 8) history.shift();
+            currentNumber += 1;
+            updateScreen(true);
+        }
+
+        function prevTurn() {
+            if (currentNumber > 1) {
+                currentNumber -= 1;
+                updateScreen(false);
+            }
+        }
+
+        function setManualTurn() {
+            const val = parseInt(document.getElementById('manualInput').value, 10);
+            if (!isNaN(val) && val >= 1) {
+                currentNumber = val;
+                document.getElementById('manualInput').value = '';
+                updateScreen(true);
+            }
+        }
+
+        function resetAll() {
+            currentNumber = 1;
+            history = [];
+            updateScreen(false);
+        }
+
+        function playBell() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.setValueAtTime(880, now + 0.15);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 1.0);
+            } catch (e) {}
+        }
+
+        function announceTurn() {
+            playBell();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                setTimeout(() => {
+                    const msg = new SpeechSynthesisUtterance(`Turno ${currentNumber}, favor de pasar a la foto con Santa.`);
+                    msg.lang = 'es-MX';
+                    msg.rate = 0.95;
+                    window.speechSynthesis.speak(msg);
+                }, 500);
+            }
+        }
+
+        // Atajos de teclado para avanzar súper rápido
+        document.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT') return;
+            if (e.code === 'Space' || e.code === 'ArrowRight') {
+                e.preventDefault();
+                nextTurn();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                prevTurn();
+            }
+        });
+
+        updateScreen(false);
+    </script>
+</body>
+</html>
